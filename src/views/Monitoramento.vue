@@ -73,7 +73,35 @@
               </div>
             </div>
             <div class="data">
-              <div class="imgcalendario"><img src="../assets/983161df263966517dc3281cc57a618247e2c744.png" alt=""></div><div class="dataselect"></div>
+              <div class="imgcalendario"><img src="../assets/983161df263966517dc3281cc57a618247e2c744.png" alt=""></div>
+              <div class="dataselect">
+                <v-list density="compact" tile slim
+                lines="one">
+                  <div class="d-flex">
+
+                    <v-btn
+                      variant="text"
+                      @click="toggleSort"
+                      class="btndata"
+                      stacked
+                    >
+                      <span class="codigotitulo">Data</span>
+                      <v-icon class="codigoicon">
+                        {{ sortAscending ? 'mdi-menu-up' : 'mdi-menu-down' }}
+                      </v-icon>
+                    </v-btn>
+                  </div>
+                  <v-divider class="opacity-90" color="cyan"></v-divider>
+                  <v-list-item
+                    v-for="item in sortedDates()"
+                    :key="item.text"
+                    :value="item"
+                    color="gray"
+                  >
+                    <v-list-item-title v-text="item.text"></v-list-item-title>
+                  </v-list-item>
+                </v-list>
+              </div>
             </div>
           </div>
           <div class="dadosempresa">
@@ -105,20 +133,48 @@ const toggleSelectAll = () => {
   selectedItems.value = isAllSelected.value ? [] : apidothiago.value
 }
 
+const sortAscending = ref(true)
+
+function sortedDates() {
+  const dates = dataFormatted()
+  return dates.sort((a, b) => {
+    const dateA = a.text.split('/').reverse().join('-')
+    const dateB = b.text.split('/').reverse().join('-')
+    return sortAscending.value
+      ? dateB.localeCompare(dateA)
+      : dateA.localeCompare(dateB)
+  })
+}
+
+function toggleSort() {
+  sortAscending.value = !sortAscending.value
+}
 
 const apidothiago = ref([
   {
   name: 'comoéamigo',
     id: '12',
+    data: '2021-09-01',
   },
   {
     name: 'o gustavo',
     id: '2',
+    data: '2021-09-21',
   }])
+function dataFormatted() {
+  if (!apidothiago.value?.length) {
+    return []
+  }
+
+  return apidothiago.value.map(item => ({
+    text: item.data ? item.data.split('-').reverse().join('/') : ''
+  }))
+}
 </script>
 <style scoped>
 .app{
   min-height: 100dvh;
+  font-family: Poppins, 'sans-serif';
   display: flex;
   flex-direction: column;
   background-color: #FF6600;
@@ -142,14 +198,18 @@ const apidothiago = ref([
 .tituloimg img{
   height: 11dvh;
 }
+@font-face{
+  font-family: 'Poppins';
+  src: url(../assets/Poppins,Smooch_Sans/Poppins/Poppins-Regular.ttf);
+}
 .titulo{
   margin-left: 0;
   width: 97dvw;
   height: 18dvh;
   border-radius: 30px;
   display: flex;
-  font-family: Poppins, 'sans-serif';
   font-size: 3rem;
+  font-family: 'Poppins', 'serif';
   justify-content: space-between;
   text-align: center;
   align-items: center;
@@ -200,7 +260,11 @@ const apidothiago = ref([
 .v-select {
   width: 14dvw;
 }
-
+.dataselect{
+display: flex;
+  width: 60%;
+flex-direction: column;
+margin-left: 2.5dvw}
 .codigo{
   display: flex;
   flex-direction: row;
@@ -209,6 +273,15 @@ const apidothiago = ref([
   height: 49%;
   background-color: white;
   border-radius: 30px;
+}
+.codigoicon{
+  font-size: 1.4rem;
+  display: block !important;
+  width: 100% !important;
+  align-items: flex-start !important;
+  text-align: left !important;
+  margin-left: -0.8dvh !important;
+
 }
 .imgcodigo img{
   margin-left: 1dvw;
@@ -219,12 +292,40 @@ const apidothiago = ref([
   align-items: center;
 }
 .codigotitulo{
-  font-size: 1.1dvw;
-  font-family: PoppinsThin, 'sans-serif';
-  font-weight: bold;
+  font-size: 0.9dvw;
+  font-family: 'Arial', 'sans-serif';
+  font-weight: 700;
+  margin-bottom: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  text-align: left !important;
+
+
 }
+.btndata{
+  display: flex !important;
+  width: 100%;
+  text-align: left !important;
+  text-transform: capitalize !important;
+  align-items: flex-start !important;
+  flex-direction: column !important;
+  height: min-content !important;
+  border-radius: 0 !important;
+  font-size: 0.8dvw;
+  gap: 0 !important; /* Reduzido de 4px para 0px */
+
+  font-family: 'Arial', 'sans-serif';
+  letter-spacing: 0.01rem !important;
+
+  font-weight: 700;
+}
+.btndata:hover {
+  background-color: #f5f5f5 !important;
+}
+
 .codigoselect{
   margin-left: 2.5dvw;
+  text-align: left !important;
 }
 .data{
   display: flex;
