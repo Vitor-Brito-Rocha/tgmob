@@ -1,19 +1,21 @@
-import axios from 'axios';
-
-// Consider putting this in a config file
+import axios from 'axios'
 const API_BASE_URL = 'https://11b0-138-121-121-66.ngrok-free.app';
-
-export default async function GetListarEvento(page: number, limit: number) {
+export default async function DadosCliente(codigo_cliente: string, tg: string, data: string) {
+  if(tg == undefined) tg = ''
+  if(data == undefined) data = ''
   try {
     const response = await axios({
-      method: 'get',
-      url: `${API_BASE_URL}/api/evento/${page}/${limit}`,
+      method: 'post',
+      url: `${API_BASE_URL}/api/cliente/getinfo/${codigo_cliente}`,
       responseType: 'json',
       headers: {
         "ngrok-skip-browser-warning": "69420"
+      },
+      data: {
+        tg: tg,
+        data: data,
       }
     })
-  console.log(response)
     // Typically you only need the data part of the response
     return response.data;
 

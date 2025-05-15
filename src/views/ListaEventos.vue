@@ -3,7 +3,7 @@
     <v-container class="nav">
       <div class="menu">
         <div class="pesquisa">
-      <v-text-field hide-details  density="default" rounded v-model="searchTable" @keydown.enter="buscar()" @click:append="buscar()"  variant="outlined">
+      <v-text-field hide-details  density="default" rounded v-model="searchTable" @keydown.enter="loadFiltro()" @click:append="loadFiltro()"  variant="outlined">
         <template v-slot:label>
           {{ textoPesquisa }}
         </template>
@@ -22,7 +22,7 @@
           </div>
         </template>
         <template v-slot:append>
-        <v-btn icon color="#ffffff" @click="buscar()">
+        <v-btn icon color="#ffffff" @click="loadFiltro()">
           <v-icon color="#ff6600" icon="mdi-magnify"></v-icon>
         </v-btn>
         </template>
@@ -59,6 +59,9 @@
     }
   }"
       >
+        <template #item.dataEvento="{ item }">
+          {{ formatarData(item.dataEvento) }}
+        </template>
         <template #item.actions="{ item }">
           <router-link :to="`/monitoramento/${item.idCliente}`">
             <v-btn class="btn-tabela" @click="abrirEvento(item)" color="#ff6600">
@@ -73,7 +76,7 @@
 </template>
 <script setup lang="ts">
 import { onMounted, ref, watch} from 'vue'
-import ListarEvento from "@/services/listagemeventos.ts";
+import GetListarEvento from "@/services/listagemeventos.ts";
 import FiltrarListaEvento from "@/services/filtragemeventos.ts"
 const page = ref(1)
 const totalItems = ref(0)
@@ -90,8 +93,10 @@ const searchTable = ref('')
 
 const headers = [
   {title: "TG Código", key: "tg", width: "90px"},
+  {title: "Nome do cliente", key: "nomecliente", width: "200px"},
   {title: "Nome do evento", key: "evento", width: "200px"},
   {title: "Data", key: "dataEvento", width: "50px"},
+  {title: "Horário", key: "horarioEvento", width: "50px"},
   {title: "Ações", key: "actions", sortable: false, width: "40px"},
 ]
 
@@ -99,23 +104,24 @@ const selectedFiltro = ref(0)
 const filtro = ref([
   {title: "TG-Cód", id: 0},
   {title: "Nome do evento", id: 1},
-  {title: "Data", id: 2},
+  {title: "Nome do cliente", id: 2},
 ])
 const textoPesquisa = ref('Pesquisar por Código TG')
 const btnText = ref('Acessar')
 const apidothiago = ref([])
 
 // Watcher para mudanças na paginação
-watch([page, itemsPerPage], () => {
-  loadItems()
+watch([selectedFiltro], () => {
+  filtroText()
 })
-function buscar(){
-  loadFiltro()
+
+const formatarData = (dataStr) => {
+  return dataStr.slice(0, 10)
 }
 async function loadItems() {
   loading.value = true
   try {
-    const response = await ListarEvento(page.value, itemsPerPage.value)
+    const response = await GetListarEvento(page.value, itemsPerPage.value)
     apidothiago.value = response.dados || []
 
     totalItems.value = response.total_items || 0
@@ -133,9 +139,9 @@ console.log('items por pagina', itemsPerPage.value)
 }
 async function loadFiltro() {
   loading.value = true
-  if(searchTable.value.trim().length <= 0) {
+  if(searchTable.value.trim().length == 0) {
     await loadItems()
-    return
+    return;
   } else {
   try {
     const response = await FiltrarListaEvento(page.value, itemsPerPage.value, selectedFiltro.value, searchTable.value)
@@ -155,19 +161,27 @@ async function loadFiltro() {
   }}
 }
 onMounted(async () => {
-  await loadItems()
+  await loadFiltro()
 })
 
-function limparPesquisa() {
+async function limparPesquisa() {
   if(searchTable.value.trim().length > 0) {
     searchTable.value = ''
-  }
-  loadItems()
-}
+   await loadFiltro()
+  }}
+
 
 function abrirEvento(item) {
   console.log(item)
 }
+function filtroText() {
+  if(selectedFiltro.value === 0) {
+    textoPesquisa.value = 'Pesquisar por Código TG'
+  } else if(selectedFiltro.value === 1) {
+    textoPesquisa.value = 'Pesquisar por nome do evento'
+  } else if(selectedFiltro.value === 2) {
+    textoPesquisa.value = 'Pesquisar por nome do cliente'
+  }}
 </script>
 <style scoped>
 @font-face{
@@ -180,6 +194,7 @@ function abrirEvento(item) {
   font-family: 'Poppins', 'sans-serif';
   display: flex;
   flex-direction: column;
+  text-align: left !important;
   background-color: #f2f2f2;
   top: 0;
   justify-content: center;
@@ -272,6 +287,9 @@ justify-content: center;
 :deep(.v-data-table-footer .v-field__input){
   width: 5rem;
   min-width: 4rem;
+}
+:deep(a){
+  background: none !important;
 }
 :deep(.v-field__input){
   align-items: center;

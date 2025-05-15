@@ -19,9 +19,11 @@
               <div class="codigoselect">
                 <span class="codigotitulo">Cód Cliente</span>
                 <v-select
-                  v-model="selectedItems"
-                  :items="apidothiago"
+                  :loading="loadingTg"
+                  v-model="codigoTgSelecionado"
+                  :items="codigosTg"
                   density="compact"
+                  clearable
                   item-title="name"
                   variant="outlined"
                   attach
@@ -29,11 +31,7 @@
                   menu-icon="none"
                   hide-details
                   placeholder="Filtrar códigos"
-                  multiple
-                  chips
-                  closable-chips
                   show-size
-                  counter
                   class="select"
                   no-data-text="Não há dados disponíveis"
                   :menu-props="{location: 'bottom', maxHeight: 300, maxWidth: 250 }"
@@ -54,22 +52,15 @@
                         <v-icon start>mdi-magnify</v-icon>
                       </template>
                     </v-text-field>
-
-                    <v-list-item
-                      density="compact"
-                      class="mt-2"
-                      @click="toggleSelectAll"
-                    >
-                      <template v-slot:prepend>
-                        <v-checkbox-btn true-icon="mdi-square"
-                                        v-model="isAllSelected"
-                        ></v-checkbox-btn>
-                      </template>
-                      <v-list-item-title>
-                        {{ isAllSelected ? 'Desmarcar todos' : 'Selecionar todos' }}
-                      </v-list-item-title>
-                    </v-list-item>
                     <v-divider class="mt-2"></v-divider>
+                  </template>
+                  <template #item="{ props, item }">
+                    <v-list-item v-bind="props">
+                      <template #prepend>
+                        <v-icon>{{codigoTgSelecionado == item.raw ? 'mdi-square' : 'mdi-square-outline'}}</v-icon> <!-- same icon for all items -->
+                      </template>
+                      <v-list-item-title>{{ item.raw.title }}</v-list-item-title>
+                    </v-list-item>
                   </template>
                 </v-select>
 
@@ -79,56 +70,81 @@
               <div class="imgcalendario"><img src="../assets/983161df263966517dc3281cc57a618247e2c744.png" alt=""></div>
               <div class="dataselect">
 
-                  <v-btn
-                    variant="text"
-                    @click="toggleSort"
-                    class="btndata"
-                  >
-                    <span class="codigotitulo">Data</span> &nbsp;
-                    <v-icon class="codigoicon">
-                      {{ sortAscending ? 'mdi-menu-up' : 'mdi-menu-down' }}
-                    </v-icon>
-                  </v-btn>
+                <span class="codigotitulo">Datas
+<!--                  <v-icon @click="toggleSort">{{sortAscending ? 'mdi-menu-up' : 'mdi-menu-down'}}-->
+<!--                  </v-icon>-->
+                </span>
+                <v-select
+                  :loading="loadingDatas"
+                  :items="sortedDates()"
+                  density="compact"
+                  variant="outlined"
+                  clearable
+                  attach
+                  hide-details
+                  placeholder="Filtrar datas"
+                  show-size
+                  item-title=""
+                  menu-icon="none"
+                  item-value=""
+                  :menu-props="{ location: 'bottom', maxHeight: 300, maxWidth: 250 }"
+                  :append-inner-icon="isOpenData ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+                  @update:menu="onMenuUpdateData"
+                  v-model="novaData"
+                >
+                  <template v-slot:prepend-item>
+                    <v-text-field
+                      v-model="search"
+                      label="Pesquisar"
+                      density="compact"
+                      hide-details
+                      single-line
+                      variant="solo"
+                      class="mx-2 mt-2"
+                    >
+                      <template v-slot:prepend-inner>
+                        <v-icon start>mdi-magnify</v-icon>
+                      </template>
+                    </v-text-field>
+                    <v-divider class="mt-2"></v-divider>
+                  </template>
 
-                  <v-divider class="opacity-90 ma-0" color="cyan" ></v-divider>
-                <v-list density="compact" v-model:selected="novaData" tile slim
-                lines="one" class="lista" @update:selected="dataSelecionada" >
-                  <v-list-item
-                    v-for="item in sortedDates()"
-                    :key="item.text"
-                    :value="item"
-                    color="gray"
-                    density="compact"
-                    class="listitem"
-                  >
-                    <v-list-item-title  v-text="item.text"></v-list-item-title>
-                  </v-list-item>
-                </v-list>
+                  <template #item="{ props, item }">
+                    <v-list-item v-bind="props">
+                      <template #prepend>
+                        <v-icon>{{ novaData === item.raw ? 'mdi-square' : 'mdi-square-outline' }}</v-icon>
+                      </template>
+                      <v-list-item-title>{{ item.raw.title }}</v-list-item-title>
+                    </v-list-item>
+                  </template>
+                </v-select>
+
               </div>
             </div>
           </div>
           <div class="dadosempresa">
-  <div class="coluna-esquerda">
-    <div class="item-coluna">Empresa</div>
-    <div class="item-coluna">Cliente</div>
-    <div class="item-coluna">Consultor</div>
-    <div class="item-coluna">Evento</div>
-  </div>
-  <div class="coluna-direita">
-    <div class="textos clientetext"> {{novaData[0]?.text}} </div>
-    <div class="textos clientetext"></div>
-    <div class="textos clientetext"></div>
-    <div class="textos clientetext"></div>
-  </div>
-</div>
+            <div class="coluna-esquerda">
+              <div class="item-coluna">Empresa</div>
+              <div class="item-coluna">Cliente</div>
+              <div class="item-coluna">Consultor</div>
+              <div class="item-coluna">Evento</div>
+            </div>
+            <div class="coluna-direita">
+              <div class="textos clientetext"> {{apidothiago.resumoCliente?.empresa}} </div>
+              <div class="textos clientetext">{{apidothiago.resumoCliente?.cliente}}</div>
+              <div class="textos clientetext">{{apidothiago.resumoCliente?.consultor}}</div>
+              <div class="textos clientetext">{{apidothiago.resumoCliente?.evento}}</div>
+            </div>
+          </div>
         </div>
         <div class="tabela">
           <v-data-table class="tabelavuetify"
                         :loading="loading"
+                        loading-text="Não há dados disponíveis"
                         hover
                         fixed-header
                         :search="searchTable"
-                        :items="apidothiago"
+                        :items="apidothiago.viagens"
                         :headers="headers"
                         disable-sort
                         :items-per-page-text="'Itens por página'"
@@ -158,56 +174,67 @@
   </v-app>
 </template>
 <script setup lang="ts">
-import { shallowRef, ref, computed } from 'vue'
-const selectedItems = ref([])
+import {shallowRef, ref, computed, onBeforeMount, watch, onMounted} from 'vue'
+import { useRoute } from 'vue-router'
+import DadosCliente from '@/services/monitorarcliente.ts';
+import GetCodigoCliente from "@/services/codigoscliente.ts";
+import GetDataCliente from "@/services/datascliente.ts";
+const route = useRoute()
+const loadingDatas = ref(false)
+const loadingTg = ref(false)
+const dataBoolean = ref(true)
+const datas = ref([])
 const isOpen = ref(false)
+const isOpenData = ref(false)
 const search = ref('')
 const loading = ref(false)
+const codigoTgSelecionado = ref(null)
+const codigosTg = ref([])
 const searchTable = ref('')
-const novaData = shallowRef([])
-const dataFormatada = ref('')
+const novaData = ref(null)
 const headers = [
-  {title: "Serviço", key: "servico", width: "140px"},
-  {title: "Data", key: "data", width: "140px"},
-  {title: "Horário", key: "horario", width: "180px"},
+  {title: "Serviço", key: "tg", width: "120px"},
+  {title: "Data", key: "data", width: "100px"},
+  {title: "Horário", key: "horario", width: "75px"},
   {title: "Origem", key: "origem", width: "150px"},
   {title: "Destino", key: "destino", width: "180px"},
-  {title: "Veículo", key: "veiuclo", width: "180px"},
-  {title: "Motorista", key: "name", width: "180px"}, // Largo o suficiente para "em atendimento"
-  {title: "Telefone", key: "telefone", sortable: false, width: "150px"},
+  {title: "Veículo", key: "veiculo", width: "170px"},
+  {title: "Motorista", key: "motorista", width: "160px"}, // Largo o suficiente para "em atendimento"
+  {title: "Telefone", key: "telefone", sortable: false, width: "120px"},
   {title: "Passageiro", key: "passageiro", sortable: false, width: "160px"},
-  {title: "Status", key: "id", sortable: false, width: "150px"},
+  {title: "Status", key: "status", sortable: false, width: "150px"},
 ]
-const apidothiago = ref([
-  {
-  name: 'comoéamigo',
-    id: '12',
-    data: '2021-09-01',
-  },
-  {
-    name: 'o johnson',
-    id: '2',
-    data: '2021-09-21',
-  }])
+const codigoCliente = ref(route.params.id)
+const apidothiago = ref([])
 const isAllSelected = computed(() => {
-  return selectedItems.value.length === apidothiago.value.length
+  return codigosTg.value.length === codigosTg.value.length
 })
 
 const onMenuUpdate = (value: boolean) => {
   isOpen.value = value
 }
-
-const toggleSelectAll = () => {
-  selectedItems.value = isAllSelected.value ? [] : apidothiago.value
+const onMenuUpdateData = (value: boolean) => {
+  isOpenData.value = value
 }
 
-const sortAscending = ref(true)
 
+const sortAscending = ref(true);
+
+onMounted(() => {
+  GetDatasCliente()
+  getDadosCliente()
+  GetCodigosTg()
+  console.log(codigoCliente.value)
+})
+
+watch([codigoTgSelecionado, novaData], () => {
+  getDadosCliente()
+})
 function sortedDates() {
-  const dates = dataFormatted()
+  const dates = datas.value
   return dates.sort((a, b) => {
-    const dateA = a.text.split('/').reverse().join('-')
-    const dateB = b.text.split('/').reverse().join('-')
+    const dateA = a
+    const dateB = b
     return sortAscending.value
       ? dateB.localeCompare(dateA)
       : dateA.localeCompare(dateB)
@@ -217,27 +244,45 @@ function sortedDates() {
 function toggleSort() {
   sortAscending.value = !sortAscending.value
 }
-
-function dataSelecionada() {
-  if (novaData.value.length > 0 && novaData.value[0].text) {
-    dataFormatada.value = novaData.value[0].text.split('/').reverse().join('-')
-    console.log('Data formatada:', dataFormatada.value)
-  } else {
-    dataFormatada.value = ''
+async function getDadosCliente(){
+  apidothiago.value = []
+  loading.value = true
+  try {
+    const response = await DadosCliente(codigoCliente.value, codigoTgSelecionado.value, novaData.value)
+    apidothiago.value = response.dados || []
+  console.log('apithiagao', apidothiago.value.viagens)
+  } catch (error) {
+    console.error('Erro ao carregar itens:', error)
+  } finally {
+    loading.value = false
   }
-}
-function dataFormatted() {
-  if (!apidothiago.value?.length) {
-    return []
-  }
 
-
-  return apidothiago.value.map(item => ({
-    text: item.data ? item.data.split('-').reverse().join('/') : ''
-  }))
 }
 
+async function GetCodigosTg(){
+  loadingTg.value = true
+  try {
+    const response = await GetCodigoCliente(codigoCliente.value)
+    codigosTg.value = response.dados || []
 
+  } catch (error) {
+    console.error('Erro ao carregar itens:', error)
+  } finally {
+    loadingTg.value = false
+  }
+}
+async function GetDatasCliente() {
+  loadingDatas.value = true
+  try {
+    const response = await GetDataCliente(codigoCliente.value)
+    datas.value = response.dados || []
+
+  } catch (error) {
+    console.error('Erro ao carregar itens:', error)
+  } finally {
+    loadingDatas.value = false
+  }
+}
 </script>
 <style scoped>
 ::v-deep(.v-data-table-footer){
@@ -340,16 +385,49 @@ function dataFormatted() {
   width: 14dvw;
 }
 .dataselect{
-display: flex;
+  display: flex;
   width: 60%;
-  height: 80%;
   max-height: 80%;
-flex-direction: column;
-margin-left: 2.5dvw
+  margin-bottom: 4dvh;
+  flex-direction: column;
+  margin-left: 2.5dvw
 }
 .listitem:hover{
   background-color: #f5f5f5 !important;
 
+}
+.v-field__input{
+  color: #FF6600 !important;
+  border: none !important;
+}
+:deep(.v-field__input) {
+  align-items: center;
+  text-align: left;
+}
+:deep(.v-field__input) {
+  color: #FF6600;
+  border: none;
+}
+:deep(.vmain .v-data-table){
+  height: 100%;
+  border-radius: 30px;
+}
+:deep(.v-table){
+  height: 100%;
+  border-radius: 30px;
+}
+:deep(.v-table__wrapper){
+  height: 100%;
+  border-radius: 20px;
+}
+:deep(.v-data-table-header__content span){
+  font-size: 1rem;
+  color: white;
+  font-weight: bolder !important;
+}
+:deep(.v-data-table-footer){
+  background-color: #ff6600 !important;
+  border-radius: 0 0 30px 30px;
 }
 .codigo{
   display: flex;
@@ -413,7 +491,7 @@ margin-left: 2.5dvw
   background-color: #f5f5f5 !important;
 }
 .select{
-font-size: 2px;
+  font-size: 2px;
 }
 .codigoselect{
   margin-left: 2.5dvw;
@@ -487,6 +565,7 @@ font-size: 2px;
   font-family: 'Arial', 'sans-serif';
   font-weight: 700;
   border-radius: 30px;
+  justify-content: center;
   box-shadow: 0 4px 4px 0 rgba(0, 0, 0, 0.25) ;
   height: 8dvh;
   background-color: white;

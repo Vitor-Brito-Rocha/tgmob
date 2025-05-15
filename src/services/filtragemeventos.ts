@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Consider putting this in a config file
-const API_BASE_URL = 'https://54bf-138-121-121-66.ngrok-free.app';
+const API_BASE_URL = 'https://11b0-138-121-121-66.ngrok-free.app';
 
 export default async function FiltrarListaEvento(page: number, limit: number, filtro: number, search: string) {
   if(filtro === 0){
